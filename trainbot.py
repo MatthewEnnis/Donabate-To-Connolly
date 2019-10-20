@@ -1,8 +1,37 @@
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 import time
+import secrets
+
+def tweet(delaytotal,delayrate,traincount):
+	rate = (traincount - delayrate) / traincount
+	tweet = "Donabate's trains to Connolly had "+str(delaytotal)+" minutes of delays today. Irish Rail considers this to be "+str(rate)+"% punctuality."
+	
+	driver = webdriver.Chrome()
+	driver.get("https://m.twitter.com/login")
+	time.sleep(5)
+
+	enteruser = driver.find_element_by_name("session[username_or_email]")
+	enteruser.send_keys("IgnoredDelays")
+	enterpassword = driver.find_element_by_name("session[password]")
+	enterpassword.send_keys(secrets.password + Keys.ENTER)
+	time.sleep(4)
+
+	driver.get("https://m.twitter.com/compose/tweet")
+	time.sleep(3)
+	actions = ActionChains(driver)
+	actions.send_keys(tweet)
+	actions.key_down(Keys.LEFT_CONTROL)
+	actions.send_keys(Keys.ENTER)
+	actions.key_up(Keys.LEFT_CONTROL)
+	actions.perform()
+	time.sleep(10)
+	driver.close()
+	
 
 def getdelay(soup, number):
 	block = soup.find_all("div", class_="hfs_connectionTime departure")[number]
@@ -22,7 +51,6 @@ urlpart2 = "!REQ0JourneyTime|0!Number_adults|1!Number_children|0!Number_students
 
 
 while 1:
-	totaldelay = 0
 	rn = time.localtime(time.time())
 	url = urlpart1 + "%s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year) + urlpart2
 
@@ -36,6 +64,9 @@ while 1:
 	else:
 		traincount = 29
 		nexttrain = [6,36]
+	
+	totaldelay = 0
+	delayrate = traincount
 	
 	print("Starting day %s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year))
 	
@@ -60,6 +91,8 @@ while 1:
 				
 				delay = getdelay(soup,i)
 				totaldelay += delay
+				if delay > 10:
+					delayrate -= 1
 				
 				print("train at",nexttrain,"is delayed by",delay)
 				
@@ -70,4 +103,6 @@ while 1:
 			rn = time.localtime(time.time())
 	
 	print("total delays of",totaldelay,"for day %s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year))
+	print("success rate of",(traincount-delayrate)/traincount)
+	tweet(delaytotal,delayrate,traincount)
 	time.sleep(60*60*7)
