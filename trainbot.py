@@ -124,5 +124,6 @@ while 1:
 	
 	print("total delays of",totaldelay,"for day %s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year))
 	print("success rate of",delayrate/traincount)
-	tweet(delaytotal,delayrate,traincount)
+	if totaldelay >= 20:
+		tweet(delaytotal,delayrate,traincount)
 	time.sleep(60*60*7) #chill for a few hours
