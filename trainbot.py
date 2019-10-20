@@ -114,8 +114,9 @@ while 1:
 					print("train at",nexttrain,"is delayed by",delay)
 					
 					#get the next train time
-					nexttrain = gettraintime(soup,i+1)
-					print("next train is at",nexttrain)
+					if i+1 < traincount:
+						nexttrain = gettraintime(soup,i+1)
+						print("next train is at",nexttrain)
 					break
 				except:
 					print("main failure")
