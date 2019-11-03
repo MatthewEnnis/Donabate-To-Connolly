@@ -16,18 +16,18 @@ def tweet(delaytotal,delayrate,traincount):
 		#open twitter
 		driver = webdriver.Chrome()
 		driver.get("https://m.twitter.com/login")
-		time.sleep(5)
+		time.sleep(8)
 		
 		#login
 		enteruser = driver.find_element_by_name("session[username_or_email]")
 		enteruser.send_keys("IgnoredDelays")
 		enterpassword = driver.find_element_by_name("session[password]")
 		enterpassword.send_keys(secrets.password + Keys.ENTER)
-		time.sleep(4)
+		time.sleep(7)
 		
 		#tweet it
 		driver.get("https://m.twitter.com/compose/tweet")
-		time.sleep(3)
+		time.sleep(6)
 		actions = ActionChains(driver)
 		actions.send_keys(tweet)
 		actions.key_down(Keys.LEFT_CONTROL)
@@ -56,14 +56,20 @@ def gettraintime(soup, number):
 	traintime = block.find("div", class_="hfs_timeRow hfs_plantime").get_text().split(":")
 	return int(traintime[0]),int(traintime[1])
 
-urlpart1 = "http://journeyplanner.irishrail.ie/webapp/?REQ0JourneyStopsS0A=1&HWAI%3DJS%21js=yes&HWAI%3DJS%21ajax=yes&REQ0JourneyStopsZ0A=1&#!start|1!REQ0JourneyStopsS0G|Donabate!REQ0JourneyStopsS0ID|A=1@O=Donabate@X=-6151344@Y=53485511@U=80@L=6010015@B=1@p=1570878154@!REQ0JourneyStopsZ0G|Connolly!REQ0JourneyStopsZ0ID|A=1@O=Connolly@X=-6246693@Y=53352885@U=80@L=6000036@B=1@p=1570878154@!journey_mode|single!REQ0JourneyDate|"
+def daycon(day):
+	if day < 10:
+		day = "0" + str(day)
+	return day
+
+urlpart1 = "https://journeyplanner.irishrail.ie/webapp/?HWAI%3DJS%21js=yes&HWAI%3DJS%21ajax=yes&#!start|1!REQ0JourneyStopsS0G|Donabate!REQ0JourneyStopsZ0G|Connolly!journey_mode|single!REQ0JourneyDate|"
 urlpart2 = "!REQ0JourneyTime|0!Number_adults|1!Number_children|0!Number_students|0"
 
+time.sleep(60*60*4)
 
 while 1:
 	rn = time.localtime(time.time())
 	#set url based on date
-	url = urlpart1 + "%s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year) + urlpart2
+	url = urlpart1 + "%s/%s/%s" % (daycon(rn.tm_mday), rn.tm_mon, rn.tm_year) + urlpart2
 	
 	#set the first train time and train count depending on the day of the week
 	day = rn.tm_wday
@@ -89,16 +95,16 @@ while 1:
 					#open page
 					driver = webdriver.Chrome()
 					driver.get(url)
-					time.sleep(4)
+					time.sleep(7)
 					
 					#switch timetable to all day mode
 					dropdown = Select(driver.find_element_by_tag_name("select"))
 					dropdown.select_by_value("1")
-					time.sleep(1)
+					time.sleep(7)
 					
 					go = driver.find_element_by_name("submitTPForm")
 					go.click()
-					time.sleep(4)
+					time.sleep(7)
 					
 					#give the correct page to beautiful soup
 					page = driver.page_source
@@ -115,8 +121,8 @@ while 1:
 					
 					#get the next train time
 					if i+1 < traincount:
-						nexttrain = gettraintime(soup,i+1)
-						print("next train is at",nexttrain)
+                                            nexttrain = gettraintime(soup,i+1)
+                                            print("next train is at",nexttrain)
 					break
 				except:
 					print("main failure")
@@ -126,5 +132,5 @@ while 1:
 	print("total delays of",totaldelay,"for day %s/%s/%s" % (rn.tm_mday, rn.tm_mon, rn.tm_year))
 	print("success rate of",delayrate/traincount)
 	if totaldelay >= 20:
-		tweet(delaytotal,delayrate,traincount)
+		tweet(totaldelay,delayrate,traincount)
 	time.sleep(60*60*7) #chill for a few hours
